@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+var pinNumber= 7;
+
+function setPin(webSocket,pinNum,val){
+   webSocket.send(val+pinNum);
+   var element = document.getElementById('sendArea');
+    element.innerHTML = val+pinNum; 
+}
+
+function ToggleHL(webSocket,pinNum){
+  ToggleHL.state=!ToggleHL.state;
+  setPin(webSocket,pinNum,ToggleHL.state ? 'L':'H');
+}
+
+
+window.onbeforeunload = function() {
+    //ws.onclose = function () {}; // disable onclose handler first
+    ws.close()
+};
+
+function StartWebSocket()
+{
+  // The browser doesn't support WebSocket
+   if (! "WebSocket" in window){
+    var element = document.getElementById('sendArea');
+    element.innerHTML = "WebSocket NOT supported by your Browser!";   
+   }
+ 
+  try{
+    ws = new WebSocket("ws://130.237.12.168/");
+
+     ws.onopen = function()
+     {
+      var element = document.getElementById('status'); 
+      element.innerHTML = "webSocket opened.";   
+      //set the pin to out
+      setPin(ws,pinNumber,'O');
+     };
+     ws.onmessage = function (evt) 
+     {
+      var element = document.getElementById('receivedArea'); 
+      element.innerHTML = evt.data; 
+     };
+     ws.onclose = function()
+     { 
+      var element = document.getElementById('status'); 
+      element.innerHTML = "Connection is closed."; 
+     };
+
+  } catch(exception) {
+    var element = document.getElementById('status'); 
+    element.innerHTML = '<p>Error'+exception; 
+  }
+}
+</script>
+
+
+<style type="text/css">
+.button {
+    border: 1px solid #006;
+    /*background: #FF;*/
+    width: 20em;  
+    height:10em;
+}
+</style>
+
+
+
+</head>
+<body>
+
+ 
+<input type="button" value="Start WebSocket" name="startwebsocket" class="button" onClick="StartWebSocket(); return true"> 
+<input type="button" value="TURN LED ON/OFF" name="ledonoff" class="button"; onClick="ToggleHL(ws,pinNumber); this.style.background=ToggleHL.state? '#FF0000':'#00FF00'; return true"> 
+<br>
+
+<!-- <form> 
+<input type="button" value="TURN LED ON/OFF" name="ledonoff" onClick="ToggleHL(ws,pinNumber); return true"> 
+</form>
+ -->
+Status: <span id="status">No Info</span><br>
+Sent Data: <span id="sendArea">Nothing Sent</span><br>
+ReceivedData: <span id="receivedArea">Nothing Received</span> 
+
+
+</body>
+</html>

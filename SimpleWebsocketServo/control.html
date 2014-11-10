@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+webSocketState=0;
+
+function updateServoPos(val){
+  if(webSocketState==1){
+    ws.send(val); 
+  }
+  var posel = document.getElementById('servoPosArea');
+  posel.innerHTML = val;
+}
+
+
+function setConnected(val){
+  var cb = document.getElementById("connectButton"); 
+  if(val==true){
+    webSocketState=1;
+    cb.style.background = '#00FF00'; 
+  }
+  else{
+    webSocketState=0;
+    cb.style.background = '#FF0000'; 
+  }
+
+}
+
+function toggleWebSocket(){
+   if(webSocketState==1){ //if connected, disconnect
+     ws.close();
+     setConnected(false);
+  }else{
+    StartWebSocket();
+  }
+
+}
+
+window.onbeforeunload = function() { 
+  if(webSocketState==1){ //if connected, disconnect
+    ws.close();
+  }
+};
+
+
+
+function StartWebSocket()
+{
+  // The browser doesn't support WebSocket
+   if (! "WebSocket" in window){
+    var element = document.getElementById('sendArea');
+    element.innerHTML = "WebSocket NOT supported by your Browser!";   
+   }
+ 
+  try{
+
+     var ipF = document.getElementById('arduinoIP');
+     ws = new WebSocket("ws://"+ipF.value+"/");
+
+     ws.onopen = function()
+     {
+      var element = document.getElementById('status'); 
+      element.innerHTML = "webSocket opened.";   
+      setConnected(true);
+      
+     };
+     ws.onmessage = function (evt) 
+     {
+      var element = document.getElementById('receivedArea'); 
+      element.innerHTML = evt.data; 
+     };
+     ws.onclose = function()
+     { 
+      var element = document.getElementById('status'); 
+      element.innerHTML = "Connection is closed."; 
+      setConnected(false);
+     };
+
+     
+
+  } catch(exception) {
+    var element = document.getElementById('status'); 
+    element.innerHTML = '<p>Error'+exception; 
+  }
+}
+</script>
+
+
+<style type="text/css">
+
+.button {
+    border: 1px solid #006;
+    background: #FF0000;
+    /*width: 600px; */
+    height:20px;
+}
+
+.slider {
+    width: 118px;  
+}
+
+</style>
+
+
+</head>
+<body>
+
+Arduino's IP: <input type="text" title="Arduino's IP" id="arduinoIP" name="arduinoIP" size="12" value="130.237.12.73" />
+
+<input type="button" id="connectButton" value="Toggle Web Socket" name="websocket" class="button" onClick="toggleWebSocket(); return true"> 
+Status: <span id="status">No Info</span>
+
+
+<hr />
+<input type="range" min="0" max="180" step="1" value="0" id="servoPos" class="slider" onchange="updateServoPos(this.value)" /> 
+pos 0: <span id="servoPosArea">0</span> 
+<br>
+
+<hr />
+<br>
+
+<!-- Sent Data: <span id="sendArea">Nothing Sent</span><br> -->
+ReceivedData: <span id="receivedArea">Nothing Received</span> 
+
+<!-- <form> 
+<input type="button" value="TURN LED ON/OFF" name="ledonoff" onClick="ToggleHL(ws,pinNumber); return true"> 
+</form>
+ -->
+
+
+
+</body>
+</html>
